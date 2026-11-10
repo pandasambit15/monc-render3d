@@ -121,7 +121,8 @@ def plan(config, outdir):
             ts = sorted(v); picks = [ts[int(i)] for i in np.linspace(0, len(ts) - 1, min(12, len(ts)))]
             sample += [v[t] for t in picks]
         s.ztop = auto_ztop(sample, s)
-    need = set(movie) | {t for p in phases for t in p['times']}
+    stills_only = bool(config.get('stills_only'))
+    need = set() if stills_only else set(movie) | {t for p in phases for t in p['times']}
     tag = config.get('tag', '')
     jobs = []
     for r in runs:
@@ -137,7 +138,7 @@ def plan(config, outdir):
                                  label=f'{label}, {fmt_time(t, unit)}{tag}', scale=2.0))
     with MoncFile(next(iter(idx[runs[0]['key']].values()))[0]) as f:
         grid = f.summary()
-    products = dict(title=config.get('title'), tag=tag, runs=[[r['key'], r.get('label', r['key'])] for r in runs],
+    products = dict(title=config.get('title'), tag=tag, stills_only=stills_only, runs=[[r['key'], r.get('label', r['key'])] for r in runs],
                     sources=info, step_s=step, time_unit=unit, movie=movie, phases=phases, stills=stills,
                     settings=s.to_dict(), grid=dict(shape=grid['shape'], dx=grid['dx'], dy=grid['dy'],
                     domain_m=grid['domain_m'], top_m=grid['top_m']),

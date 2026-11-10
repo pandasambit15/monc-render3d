@@ -74,14 +74,18 @@ def assemble(outdir, ffmpeg='auto', movie_fps=6, phase_fps=3, gif_scale=0.5, enc
         gif[0].save(OUT / f'{stem}.gif', save_all=True, append_images=gif[1:], duration=int(1000 * gif_every / fps),
                     loop=0, optimize=True)
 
-    movie = P['movie']
-    d = N / 'combined' / 'movie'; d.mkdir(parents=True, exist_ok=True)
-    if not (encode_only and len(list(d.glob('*.png'))) == len(movie)):
+    movie = [] if P.get('stills_only') else P['movie']
+    phases = [] if P.get('stills_only') else P['phases']
+    d = N / 'combined' / 'movie'
+    if movie:
+        d.mkdir(parents=True, exist_ok=True)
+    if movie and not (encode_only and len(list(d.glob('*.png'))) == len(movie)):
         sub = f'{fmt_time(movie[0], unit)} - {fmt_time(movie[-1], unit)}'
         for k, t in enumerate(movie):
             combined(t, sub).save(d / f'{k:05d}.png')
-    write(d, 'movie', movie_fps, 2 if len(movie) > 200 else 1)
-    for ph in P['phases']:
+    if movie:
+        write(d, 'movie', movie_fps, 2 if len(movie) > 200 else 1)
+    for ph in phases:
         d = N / 'combined' / ph['key']; d.mkdir(parents=True, exist_ok=True)
         if not (encode_only and len(list(d.glob('*.png'))) == len(ph['times'])):
             for k, t in enumerate(ph['times']):

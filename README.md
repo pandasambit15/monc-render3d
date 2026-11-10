@@ -14,7 +14,9 @@ or a display, so it runs on login and compute nodes of HPC systems.
 ## Examples
 
 RCE, 64 km x 64 km at 1 km grid spacing, 30 days. Three subgrid closures (Smagorinsky and two machine-learned
-closures) side by side, one ensemble member each, at days 0.5 to 29.75:
+closures) side by side, one ensemble member each, at days 0.5 to 29.75. Condensate above 8 km is faded to 0.1 of
+its extinction (`--fade-above 8000`), so the convection under the anvil shows. On days 0.5 and 1 an opaque layer of
+snow and ice below 8 km fills the domain in all three runs; that is the model state, not the rendering:
 
 ![RCE closure comparison](docs/example_rce_closures_grid.png)
 
@@ -49,6 +51,24 @@ fine), the grid spacing (`x_resolution`, or the options database), the vertical 
 - **Floor:** drawn exactly when a thin floor would alias.
 
 Horizontal boundaries are treated as periodic, as in most MONC set-ups (`--no-periodic` otherwise).
+
+## Seeing under an anvil or upper stratus deck
+
+An optically thick upper cloud deck hides the convection beneath it. Three ways to see underneath:
+
+- **Truncate:** `--ztop H` renders only 0-H m. The default render top is the cloud top found in the data.
+- **Fade:** `--fade-above H --fade-factor F` keeps the whole cloud but scales the extinction above H by F, reached
+  over `--fade-depth` (default 1000 m).
+- **Make species translucent:** `--opacity q_ice_mass=0.15 q_snow_mass=0.15` scales one species' extinction at all
+  heights.
+
+The same keys go in the `render` section of a configuration file.
+
+![Upper-deck options](docs/upper_deck_options.png)
+
+RCE day 25, Smagorinsky, from top left: default; truncated at 8 km; faded above 8 km by 0.1; ice and snow at 0.15
+opacity. Fading keeps the full cloud depth with the deck as a faint veil. Truncation shows the lower cloud most
+clearly but cuts towers flat at H. Species opacity also dims the ice inside convective cores.
 
 ## Install
 
@@ -104,7 +124,8 @@ For repeated or published figures, use a JSON configuration with `--config`. See
 | `phases` | List of `{key, label, start, end}` in seconds, one clip each. |
 | `time_unit` | `auto` (default), `s`, `min`, `h` or `day`, for labels. |
 | `time_regex` | Read the time from the file name instead of opening every file (faster for thousands of single-record files). |
-| `render` | Any render setting: `ztop`, `dz`, `nlevels`, `upsample`, `smooth`, `vexag`, `min_aspect`, `floor`, `azimuth`, `elevation`, `sun_azimuth`, `sun_elevation`, `size`, `periodic`, `species`. |
+| `render` | Any render setting: `ztop`, `dz`, `nlevels`, `upsample`, `smooth`, `vexag`, `min_aspect`, `floor`, `azimuth`, `elevation`, `sun_azimuth`, `sun_elevation`, `size`, `periodic`, `species`, `opacity`, `fade_above`, `fade_factor`, `fade_depth`. |
+| `stills_only` | Render only the stills and the snapshot grid, no movie (`--stills-only`). |
 
 The same settings are command-line options; run `monc-render3d run --help`.
 

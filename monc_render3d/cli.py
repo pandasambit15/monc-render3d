@@ -20,6 +20,12 @@ def _settings_args(p):
     g.add_argument('--sun-azimuth', type=float, dest='sun_azimuth'); g.add_argument('--sun-elevation', type=float, dest='sun_elevation')
     g.add_argument('--size', type=int, nargs=3, metavar=('W', 'H', 'D'), help='image width, height, depth samples')
     g.add_argument('--no-periodic', action='store_true', help='treat the horizontal boundaries as open')
+    g.add_argument('--fade-above', type=float, dest='fade_above', metavar='H',
+                   help='make condensate above H metres translucent (e.g. an anvil or upper stratus deck)')
+    g.add_argument('--fade-factor', type=float, dest='fade_factor', help='extinction factor above --fade-above (default 0.1)')
+    g.add_argument('--fade-depth', type=float, dest='fade_depth', help='depth of the transition in m (default 1000)')
+    g.add_argument('--opacity', nargs='+', metavar='NAME=FACTOR',
+                   help='scale one species\' extinction, e.g. q_ice_mass=0.2 q_snow_mass=0.2')
     g.add_argument('--species', nargs='+', metavar='NAME[:KEXT]',
                    help=f'condensate fields to render (default: those of {list(SPECIES)} in the file); an unknown '
                         'name needs :KEXT, a mass extinction coefficient in m2/kg')
@@ -27,7 +33,8 @@ def _settings_args(p):
 
 def _settings(args, base=None):
     d = dict(base or {})
-    for k in ('ztop', 'dz', 'nlevels', 'upsample', 'smooth', 'vexag', 'azimuth', 'elevation', 'sun_azimuth', 'sun_elevation'):
+    for k in ('ztop', 'dz', 'nlevels', 'upsample', 'smooth', 'vexag', 'azimuth', 'elevation', 'sun_azimuth', 'sun_elevation',
+              'fade_above', 'fade_factor', 'fade_depth'):
         v = getattr(args, k, None)
         if v is not None:
             d[k] = v
@@ -35,6 +42,11 @@ def _settings(args, base=None):
         d['size'] = args.size
     if getattr(args, 'no_periodic', False):
         d['periodic'] = False
+    if getattr(args, 'opacity', None):
+        d['opacity'] = dict(d.get('opacity') or {})
+        for item in args.opacity:
+            name, _, f = item.partition('=')
+            d['opacity'][name] = float(f)
     s = Settings.from_dict(d)
     if getattr(args, 'species', None):
         sp = {}
@@ -97,6 +109,9 @@ def main(argv=None):
         p.add_argument('--labels', nargs='+', help='panel labels for the --files runs')
         p.add_argument('--title'); p.add_argument('--window', choices=('common', 'union'))
         p.add_argument('--stills-count', type=int, dest='stills_count')
+        p.add_argument('--stills-hours', type=float, nargs='+', dest='stills_hours', help='times of the stills, in hours')
+        p.add_argument('--stills-only', action='store_true', dest='stills_only',
+                       help='render only the stills and the snapshot grid, no movie')
         _settings_args(p)
         if name == 'run':
             p.add_argument('--procs', type=int, default=max(1, mp.cpu_count() // 2))
@@ -131,9 +146,11 @@ def main(argv=None):
             labels = args.labels or [f'run {k + 1}' for k in range(len(args.files))]
             cfg = dict(runs=[dict(key=f'run{k + 1}', label=labels[k] if k < len(labels) else f'run {k + 1}', files=g)
                              for k, g in enumerate(args.files)])
-        for k in ('title', 'window', 'stills_count'):
+        for k in ('title', 'window', 'stills_count', 'stills_hours'):
             if getattr(args, k, None) is not None:
                 cfg[k] = getattr(args, k)
+        if args.stills_only:
+            cfg['stills_only'] = True
         cfg['render'] = _settings(args, cfg.get('render')).to_dict()
         plan(cfg, args.outdir)
         if args.cmd == 'run':

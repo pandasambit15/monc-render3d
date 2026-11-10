@@ -48,6 +48,10 @@ class Settings:
     rho0: float = 1.17            # air density profile rho0 * exp(-z / H) used to weight mixing ratios (kg/m3)
     rho_scale_height: float = 8500.0
     species: dict = field(default_factory=lambda: dict(SPECIES))   # name -> (mass extinction m2/kg, (r, g, b))
+    opacity: dict = field(default_factory=dict)  # name -> factor on that species' extinction (e.g. 0.2 for ice)
+    fade_above: float = None      # height (m) above which all condensate is made translucent ...
+    fade_factor: float = 0.1      # ... by this factor on its extinction ...
+    fade_depth: float = 1000.0    # ... reached linearly over this depth (m); see the README (upper cloud decks)
 
     def resolved(self, zn):
         ztop = float(self.ztop) if self.ztop else float(zn[-1])
@@ -91,10 +95,14 @@ def world(zn, dx, q, s):
     rho = (s.rho0 * np.exp(-zr / s.rho_scale_height)).astype(np.float32)
     wrap = 'grid-wrap' if s.periodic else 'nearest'
     gmode = ('wrap', 'wrap', 'nearest') if s.periodic else ('nearest', 'nearest', 'nearest')
+    if s.fade_above is not None:      # translucent upper levels: extinction tapers to fade_factor above fade_above
+        ramp = np.clip((zr - s.fade_above) / max(s.fade_depth, 1e-6), 0, 1)
+        rho = (rho * (1 - ramp * (1 - s.fade_factor))).astype(np.float32)
     beta = 0.0; tint = 0.0
     for name, (kext, colour) in s.species.items():
         if name not in q:
             continue
+        kext = kext * s.opacity.get(name, 1.0)
         a = q[name][:, :, k0] * (1 - w) + q[name][:, :, k0 + 1] * w
         a = ndimage.zoom(np.clip(a, 0, None), (up, up, 1), order=1, mode=wrap)
         a = ndimage.gaussian_filter(a, (s.smooth * up, s.smooth * up, s.smooth_z), mode=gmode)
