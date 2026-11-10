@@ -1,0 +1,18 @@
+{
+ "title": "RCE, 1 km grid, 64 km x 64 km",
+ "tag": ", member 01",
+ "window": "common",
+ "time_unit": "day",
+ "runs": [
+  {"key": "smagorinsky", "label": "Smagorinsky", "files": ["/path/to/smag/diagnostic_files/*_diagnostic_3d_*.nc",
+                                                          "/path/to/smag_continuation/diagnostic_files/*_diagnostic_3d_*.nc"]},
+  {"key": "ri_mlp", "label": "Ri-MLP", "files": ["/path/to/ri_mlp/diagnostic_files/*_diagnostic_3d_*.nc"]},
+  {"key": "q4_mlp", "label": "Q4-MLP", "files": ["/path/to/q4_mlp/diagnostic_files/*_diagnostic_3d_*.nc"]}
+ ],
+ "stills_days": [0.5, 1, 2, 5, 10, 17, 25, 29.75],
+ "phases": [
+  {"key": "spinup", "label": "spin-up, days 0-2", "start": 0, "end": 172800},
+  {"key": "equilibrium", "label": "days 25-29.75", "start": 2160000, "end": 2570400}
+ ],
+ "render": {"ztop": 18000}
+}

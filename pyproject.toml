@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "monc-render3d"
+version = "0.1.0"
+description = "3-D cloud volume renders, snapshot grids and movies from MONC 3-D diagnostic NetCDF files"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = ["numpy", "scipy", "Pillow", "netCDF4"]
+
+[project.optional-dependencies]
+fonts = ["matplotlib"]
+video = ["imageio-ffmpeg"]
+test = ["pytest"]
+
+[project.scripts]
+monc-render3d = "monc_render3d.cli:main"
+
+[tool.setuptools]
+packages = ["monc_render3d"]
