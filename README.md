@@ -20,9 +20,8 @@ snow and ice below 8 km fills the domain in all three runs; that is the model st
 
 ![RCE closure comparison](docs/example_rce_closures_grid.png)
 
-ARM SGP shallow cumulus, 9.6 km x 9.6 km at 50 m grid spacing, simple cloud scheme, Smagorinsky. Stills at 3, 6, 9,
-12 and 14.5 h of the 14.5 h run (clear sky at 3 h and again by 14.5 h), with the render top (3.5 km) chosen
-automatically from the data:
+ARM SGP shallow cumulus, 9.6 km x 9.6 km at 50 m grid spacing, simple cloud scheme, Smagorinsky. Stills at 4.5, 6,
+7.5, 9, 10.5 and 12 h of the 14.5 h run, with the render top (3.5 km) chosen automatically from the data:
 
 ![ARM shallow cumulus](docs/example_arm_shallow_cumulus.png)
 
